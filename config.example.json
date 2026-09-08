@@ -1,0 +1,99 @@
+{
+  "_comment": "Copy this to config.json and fill in the IDs. Emoji are prefilled from the promotion guide.",
+
+  "guild_id": "",
+
+  "_officer_roles": "Roles allowed to log merit, grant awards and set oath/uniform flags.",
+  "officer_roles": [],
+
+  "_command_roles": "Roles allowed to record appointments and correct merit totals.",
+  "command_roles": [],
+
+  "_promotion_channel": "Where promotion announcements go. Leave blank to announce in the channel the command was run in.",
+  "promotion_channel": "",
+
+  "_audit_channel": "Optional. Every merit change is mirrored here.",
+  "audit_channel": "",
+
+  "_manage_roles": "Set false to have the bot track ranks without touching Discord roles.",
+  "manage_roles": true,
+
+  "_demote_on_merit_loss": "Set false to keep a rank once reached, even if merit is later revoked.",
+  "demote_on_merit_loss": true,
+
+  "embed_color": "0xC9A227",
+
+  "rank_roles": {
+    "loyalist": "",
+    "junior_loyalist": "",
+    "senior_loyalist": "",
+    "group_loyalist": "",
+    "section_loyalist": "",
+    "unit_loyalist": "",
+    "group_official": "",
+    "service_official": "",
+    "section_official": "",
+    "district_official": "",
+    "precinct_official": ""
+  },
+
+  "appointment_roles": {
+    "counselor": "",
+    "grand_chancellor": "",
+    "grand_siridar": "",
+    "grand_marshal": "",
+    "chairman_compao": "",
+    "abexilian_marshal": "",
+    "deputy_chairman_compao": "",
+    "group_leader": "",
+    "national_leader": "",
+    "state_leader": "",
+    "department_leader": "",
+    "regional_leader": "",
+    "provincial_leader": "",
+    "municipal_leader": "",
+    "siridar": "",
+    "governor": "",
+    "prefect": ""
+  },
+
+  "emojis": {
+    "loyalist": "<:Loyalist:1540920374487679046>",
+    "junior_loyalist": "<:Junior_Loyalist:1540920342850306089>",
+    "senior_loyalist": "<:Senior_Loyalist:1540920290924826666>",
+    "group_loyalist": "<:Group_Loyalist:1540920192803020820>",
+    "section_loyalist": "<:Section_Loyalist:1540920099165446154>",
+    "unit_loyalist": "<:Unit_Loyalist:1540919947729829938>",
+    "group_official": "<:Group_Official:1540919839982620752>",
+    "service_official": "<:Service_Official:1540919627264172112>",
+    "section_official": "<:Section_Official:1540919437669179432>",
+    "district_official": "<:District_official:1540919332824158288>",
+    "precinct_official": "<:Precinct_Official:1540919206197985421>",
+
+    "counselor": "<:Counselor:1540943350767681586>",
+    "grand_chancellor": "",
+    "grand_siridar": "<:Grand_Siridar:1538766881928908840>",
+    "grand_marshal": "<:Grand_General:1540942984806146138>",
+    "chairman_compao": "<:Chairman:1540943158169571431>",
+    "abexilian_marshal": "<:Grand_General:1540942984806146138>",
+    "deputy_chairman_compao": "<:Branch_Command:1540921919560355840>",
+    "group_leader": "<:Group_Leader:1540917929481207918>",
+    "national_leader": "<:National_Leader:1540918307648180264>",
+    "state_leader": "<:State_leader:1540918364996898916>",
+    "department_leader": "<:Department_leader:1540918462363471993>",
+    "regional_leader": "<:Regional_Leader:1540918562225397760>",
+    "provincial_leader": "<:Provincial_Leader:1540918690705444874>",
+    "municipal_leader": "<:Municipal_Leader:1540918932230242314>",
+    "siridar": "<:Siridar:1540964903244931112>",
+    "governor": "<:Governor:1538743584835117076>",
+    "prefect": "<:Prefect:1541547494721462392>",
+
+    "Junior Bureaucrat": "<:Junior_Bureaucrat:1540922235152502894>",
+    "Senior Bureaucrat": "<:Senior_Bureaucrat:1540922163643678730>",
+    "Regional Command": "<:Regional_Command:1540922051240665208>",
+    "High Command": "<:High_Command:1540921978448379924>",
+    "Branch Command": "<:Branch_Command:1540921919560355840>",
+    "Supreme Command": "<:Supreme_Command:1540921864119918712>",
+    "Council of Governors": "<:Governor:1538743584835117076>"
+  }
+}
