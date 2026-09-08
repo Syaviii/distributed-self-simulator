@@ -78,6 +78,16 @@ async def sync_rank(
     return change
 
 
+PAUSED_NOTICE = "Role changes are paused, so merit is tracked but no roles move."
+
+
+def paused_note(config: Config, change: RankChange) -> str | None:
+    """Told to the officer when a rank moved but role syncing is switched off."""
+    if config.manage_roles or not change.changed:
+        return None
+    return PAUSED_NOTICE
+
+
 async def apply_rank_roles(
     config: Config, member: discord.Member, rank: Rank, track: str
 ) -> str | None:

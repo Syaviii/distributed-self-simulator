@@ -9,7 +9,7 @@ from discord.ext import commands
 from ..checks import command_only, officer_only
 from ..db import MemberRecord
 from ..embeds import history_embed, profile_embed
-from ..promotion import RankChange, announce, sync_rank
+from ..promotion import RankChange, announce, paused_note, sync_rank
 from ..ranks import (
     HOST_MIN_RANK_KEY,
     LOGGABLE_SOURCES,
@@ -73,6 +73,9 @@ class Merit(commands.Cog):
             )
         if change.role_warning:
             lines.append(f"Warning: {change.role_warning}")
+        paused = paused_note(self.bot.config, change)
+        if paused:
+            lines.append(paused)
 
         await interaction.response.send_message("\n".join(lines))
 

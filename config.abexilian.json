@@ -15,7 +15,7 @@
   ],
   "promotion_channel": "1540984437607763998",
   "audit_channel": "",
-  "manage_roles": true,
+  "manage_roles": false,
   "demote_on_merit_loss": true,
   "embed_color": "0xC9A227",
   "tier_roles": {
@@ -23,6 +23,9 @@
     "Senior Bureaucrat": "1478490947485565160"
   },
   "branch_tracks": {
+    "1462564229675618465": "compao",
+    "1462133831464255491": "compao",
+    "1462133831464255492": "compao",
     "1462553332341276858": "compao",
     "1536306528510808165": "civil_service",
     "1536306831415058483": "civil_service",

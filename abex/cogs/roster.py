@@ -9,7 +9,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from ..checks import command_only, officer_only
-from ..promotion import announce, sync_rank
+from ..promotion import PAUSED_NOTICE, announce, paused_note, sync_rank
 from ..ranks import APPOINTMENT_BY_KEY, APPOINTMENTS, get_track
 
 log = logging.getLogger(__name__)
@@ -45,6 +45,9 @@ class Roster(commands.Cog):
             )
         if change.role_warning:
             lines.append(f"Warning: {change.role_warning}")
+        paused = paused_note(self.bot.config, change)
+        if paused:
+            lines.append(paused)
 
         await interaction.response.send_message("\n".join(lines))
         if change.changed and interaction.guild is not None:
@@ -233,6 +236,8 @@ class Roster(commands.Cog):
                 warnings.add(result.role_warning)
 
         text = f"Synced {len(targets)} member(s). {changed} rank(s) changed."
+        if not self.bot.config.manage_roles:
+            text += f"\n{PAUSED_NOTICE}"
         if warnings:
             text += "\n" + "\n".join(f"Warning: {w}" for w in sorted(warnings))
         await interaction.followup.send(text, ephemeral=True)
