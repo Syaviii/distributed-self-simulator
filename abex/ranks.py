@@ -177,3 +177,65 @@ APPOINTMENT_BY_KEY: dict[str, Appointment] = {a.key: a for a in APPOINTMENTS}
 
 # Appointments from Municipal Leader upwards are commissioned officer titles.
 COMMISSIONED_GROUPS = ("Regional Command", "High Command", "Branch Command", "Supreme Command")
+
+
+@dataclass(frozen=True)
+class Track:
+    """One of the parallel rank ladders.
+
+    Every branch promotes on the same merit thresholds, but the titles differ.
+    COMPAO uses the standard titles with its own set of roles. The Civil
+    Service renames every step, so a Section Official there is a Supervisor.
+    """
+
+    key: str
+    label: str
+    names: dict[str, str]
+
+    def title(self, key: str) -> str:
+        """Display name for a rank or appointment on this track."""
+        if key in self.names:
+            return self.names[key]
+        rank = RANK_BY_KEY.get(key)
+        if rank is not None:
+            return rank.name
+        appointment = APPOINTMENT_BY_KEY.get(key)
+        return appointment.name if appointment else key.replace("_", " ").title()
+
+
+TRACK_BASE = "base"
+TRACK_COMPAO = "compao"
+TRACK_CIVIL = "civil_service"
+
+# The Civil Service is the only track that renames the ladder. Base and COMPAO
+# both use the titles from the promotion guide, they just hold separate roles.
+_CIVIL_NAMES = {
+    "loyalist": "Intern",
+    "junior_loyalist": "Junior Clerk",
+    "senior_loyalist": "Senior Clerk",
+    "group_loyalist": "Administrative Clerk",
+    "section_loyalist": "Supervisory Clerk",
+    "unit_loyalist": "Chief Clerk",
+    "group_official": "Probationary Supervisor",
+    "service_official": "Junior Supervisor",
+    "section_official": "Supervisor",
+    "district_official": "Senior Supervisor",
+    "precinct_official": "Chief Supervisor",
+    "municipal_leader": "Assistant Manager",
+    "provincial_leader": "Manager",
+    "regional_leader": "Senior Manager",
+    "department_leader": "Vice President",
+    "state_leader": "Senior Vice President",
+    "national_leader": "Executive Vice President",
+    "group_leader": "President",
+}
+
+TRACKS: dict[str, Track] = {
+    TRACK_BASE: Track(TRACK_BASE, "Abexilian Remnant", {}),
+    TRACK_COMPAO: Track(TRACK_COMPAO, "Commission for the Promotion of the Abexilian Order", {}),
+    TRACK_CIVIL: Track(TRACK_CIVIL, "Civil Service", _CIVIL_NAMES),
+}
+
+
+def get_track(key: str | None) -> Track:
+    return TRACKS.get(key or TRACK_BASE, TRACKS[TRACK_BASE])

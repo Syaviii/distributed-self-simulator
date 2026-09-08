@@ -5,8 +5,6 @@ import pytest_asyncio
 
 from abex.db import Database
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest_asyncio.fixture
 async def db(tmp_path):

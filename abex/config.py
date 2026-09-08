@@ -11,7 +11,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .ranks import APPOINTMENT_BY_KEY, RANK_BY_KEY
+from .ranks import APPOINTMENT_BY_KEY, RANK_BY_KEY, TRACK_BASE, TRACKS, Tier
 
 DEFAULT_PATH = Path("config.json")
 
@@ -25,8 +25,10 @@ class Config:
     guild_id: int
     officer_roles: list[int] = field(default_factory=list)
     command_roles: list[int] = field(default_factory=list)
-    rank_roles: dict[str, int] = field(default_factory=dict)
-    appointment_roles: dict[str, int] = field(default_factory=dict)
+    rank_roles: dict[str, dict[str, int]] = field(default_factory=dict)
+    appointment_roles: dict[str, dict[str, int]] = field(default_factory=dict)
+    tier_roles: dict[str, int] = field(default_factory=dict)
+    branch_tracks: dict[int, str] = field(default_factory=dict)
     emojis: dict[str, str] = field(default_factory=dict)
     promotion_channel: int | None = None
     audit_channel: int | None = None
@@ -51,8 +53,10 @@ class Config:
             guild_id=guild_id,
             officer_roles=[int(v) for v in raw.get("officer_roles", []) if v],
             command_roles=[int(v) for v in raw.get("command_roles", []) if v],
-            rank_roles={k: int(v) for k, v in raw.get("rank_roles", {}).items() if v},
-            appointment_roles={k: int(v) for k, v in raw.get("appointment_roles", {}).items() if v},
+            rank_roles=_role_map(raw.get("rank_roles", {})),
+            appointment_roles=_role_map(raw.get("appointment_roles", {})),
+            tier_roles={k: int(v) for k, v in raw.get("tier_roles", {}).items() if v},
+            branch_tracks={int(k): str(v) for k, v in raw.get("branch_tracks", {}).items() if v},
             emojis={k: str(v) for k, v in raw.get("emojis", {}).items() if v},
             promotion_channel=_optional_int(raw.get("promotion_channel")),
             audit_channel=_optional_int(raw.get("audit_channel")),
@@ -64,24 +68,73 @@ class Config:
         return cfg
 
     def validate(self) -> None:
-        """Catch typos in rank and appointment keys at startup, not at 3am."""
-        unknown_ranks = set(self.rank_roles) - set(RANK_BY_KEY)
-        if unknown_ranks:
-            raise ConfigError(f"rank_roles has unknown rank keys: {sorted(unknown_ranks)}")
-        unknown_appointments = set(self.appointment_roles) - set(APPOINTMENT_BY_KEY)
-        if unknown_appointments:
-            raise ConfigError(
-                f"appointment_roles has unknown appointment keys: {sorted(unknown_appointments)}"
-            )
+        """Catch typos in track, rank and appointment keys at startup, not at 3am."""
+        for label, mapping, known in (
+            ("rank_roles", self.rank_roles, set(RANK_BY_KEY)),
+            ("appointment_roles", self.appointment_roles, set(APPOINTMENT_BY_KEY)),
+        ):
+            unknown_tracks = set(mapping) - set(TRACKS)
+            if unknown_tracks:
+                raise ConfigError(f"{label} has unknown tracks: {sorted(unknown_tracks)}")
+            for track, entries in mapping.items():
+                unknown = set(entries) - known
+                if unknown:
+                    raise ConfigError(f"{label}.{track} has unknown keys: {sorted(unknown)}")
+
+        unknown_branch_tracks = set(self.branch_tracks.values()) - set(TRACKS)
+        if unknown_branch_tracks:
+            raise ConfigError(f"branch_tracks points at unknown tracks: {sorted(unknown_branch_tracks)}")
+
+        unknown_tiers = set(self.tier_roles) - {t.value for t in Tier}
+        if unknown_tiers:
+            raise ConfigError(f"tier_roles has unknown tiers: {sorted(unknown_tiers)}")
+
         if not self.officer_roles:
             raise ConfigError("officer_roles is empty, nobody would be able to log merit")
+
+    # role lookups ----------------------------------------------------------
+
+    def track_for(self, role_ids: set[int]) -> str:
+        """Which ladder a member is on, from their branch roles.
+
+        Falls back to the base track, which is what most of the server is on.
+        """
+        for role_id in role_ids:
+            track = self.branch_tracks.get(role_id)
+            if track is not None:
+                return track
+        return TRACK_BASE
+
+    def rank_role(self, track: str, rank_key: str) -> int | None:
+        """Role for a rank on a track, falling back to the base ladder."""
+        return self.rank_roles.get(track, {}).get(rank_key) or self.rank_roles.get(
+            TRACK_BASE, {}
+        ).get(rank_key)
+
+    def appointment_role(self, track: str, key: str) -> int | None:
+        return self.appointment_roles.get(track, {}).get(key) or self.appointment_roles.get(
+            TRACK_BASE, {}
+        ).get(key)
+
+    def all_rank_role_ids(self) -> set[int]:
+        """Every ladder role across every track, so a transfer cleans up after itself."""
+        return {role_id for entries in self.rank_roles.values() for role_id in entries.values()}
+
+    def all_tier_role_ids(self) -> set[int]:
+        return set(self.tier_roles.values())
 
     def emoji(self, key: str) -> str:
         """Custom emoji for a rank or appointment, or an empty string if unset."""
         return self.emojis.get(key, "")
 
-    def rank_role_ids(self) -> set[int]:
-        return set(self.rank_roles.values())
+
+def _role_map(raw: dict) -> dict[str, dict[str, int]]:
+    """Read a track keyed map of role IDs, dropping anything left blank."""
+    return {
+        track: {key: int(value) for key, value in entries.items() if value}
+        for track, entries in raw.items()
+        if isinstance(entries, dict)
+    }
 
 
 def _optional_int(value: object) -> int | None:

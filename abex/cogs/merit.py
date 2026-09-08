@@ -18,10 +18,17 @@ from ..ranks import (
     SOURCE_BY_KEY,
     TITHE_PER_MERIT,
     TITHE_SOURCE,
+    TRACK_BASE,
     Cap,
     MeritSource,
     merit_from_tithe,
 )
+
+def _track_of(config, user) -> str:
+    """Which ladder this member promotes on, from their branch roles."""
+    roles = getattr(user, "roles", None)
+    return config.track_for({r.id for r in roles}) if roles else TRACK_BASE
+
 
 SOURCE_CHOICES = [
     app_commands.Choice(name=f"{s.label} (+{s.merit})", value=s.key) for s in LOGGABLE_SOURCES
@@ -55,11 +62,10 @@ class Merit(commands.Cog):
         discord_member = member if isinstance(member, discord.Member) else None
         change: RankChange = await sync_rank(self.bot.config, self.bot.db, record, discord_member)
 
-        rank = RANK_BY_KEY[change.new.key]
-        lines = [headline, f"Total: **{record.merit}** merit, {rank.name}."]
+        lines = [headline, f"Total: **{record.merit}** merit, {change.title}."]
         if change.changed:
             verb = "Promoted to" if change.promoted else "Moved to"
-            lines.append(f"{verb} **{change.new.name}**.")
+            lines.append(f"{verb} **{change.title}**.")
         if change.gated:
             lines.append(
                 "Held at Group Loyalist until the oath and uniform are recorded. "
@@ -107,6 +113,7 @@ class Merit(commands.Cog):
                 await self.bot.db.appointments(user.id),
                 await self.bot.db.rank_position(user.id),
                 await self.bot.db.member_count(),
+                _track_of(self.bot.config, user),
             ),
             ephemeral=True,
         )

@@ -16,6 +16,39 @@ recalculates the rank, swaps the Discord role and announces the promotion.
 of Governors track, are conferred rather than earned. The bot records them and
 shows them on the profile card. It never hands one out on its own.
 
+## Three ladders
+
+The server runs three parallel ladders on identical merit thresholds. The bot
+picks the right one from a member's branch roles and gives them the matching
+role, stripping any role from the other two on the way.
+
+| Merit | Base | COMPAO | Civil Service |
+| --- | --- | --- | --- |
+| 0 | Loyalist | Loyalist | Intern |
+| 2 | Junior Loyalist | Junior Loyalist | Junior Clerk |
+| 10 | Senior Loyalist | Senior Loyalist | Senior Clerk |
+| 15 | Group Loyalist | Group Loyalist | Administrative Clerk |
+| 25 | Section Loyalist | Section Loyalist | Supervisory Clerk |
+| 35 | Unit Loyalist | Unit Loyalist | Chief Clerk |
+| 75 | Group Official | Group Official | Probationary Supervisor |
+| 135 | Service Official | Service Official | Junior Supervisor |
+| 210 | Section Official | Section Official | Supervisor |
+| 300 | District Official | District Official | Senior Supervisor |
+| 400 | Precinct Official | Precinct Official | Chief Supervisor |
+
+COMPAO uses the same titles as the base ladder but its own set of roles. The
+Civil Service renames every step, so a profile card, a promotion announcement
+and `/ranks` all show a member the titles their own branch uses.
+
+Track membership comes from `branch_tracks` in the config: the Select Committee
+role means COMPAO, the ministry and Diplomatic Corps roles mean Civil Service,
+and everyone else is on the base ladder. Merit is personal, so transferring
+branch keeps the total and simply swaps the role. Someone on 210 merit moving
+into the Civil Service stops being a Section Official and becomes a Supervisor.
+
+The bot also keeps the `Junior Bureaucrat` and `Senior Bureaucrat` tier roles in
+step with the rank, so crossing 75 merit swaps one for the other.
+
 ## The Group Loyalist gate
 
 The guide says Group Loyalist requires a uniform and oath to advance further,
@@ -44,7 +77,12 @@ one an audit would give.
 3. Invite it with the `bot` and `applications.commands` scopes and the
    **Manage Roles** permission.
 4. In the server settings, drag the bot's own role **above** every rank role.
-   Discord will not let it assign a role that sits higher than its own.
+
+Step 4 is not optional and it is the thing that will bite you. Discord ignores
+Administrator for role hierarchy: a bot cannot touch any role positioned above
+its own, no matter what permissions it holds. The bot's role has to sit above
+`Precinct Official` and its COMPAO and Civil Service equivalents, or every rank
+change fails and the bot says so on every command.
 
 ```
 git clone <this repo>
@@ -67,8 +105,10 @@ restructure means editing one file.
 | `guild_id` | Server the commands sync to |
 | `officer_roles` | Roles allowed to log merit, grant awards, set flags |
 | `command_roles` | Roles allowed to record appointments and correct totals |
-| `rank_roles` | Rank key to Discord role ID |
-| `appointment_roles` | Appointment key to Discord role ID |
+| `rank_roles` | Track to rank key to Discord role ID |
+| `appointment_roles` | Track to appointment key to Discord role ID, falling back to base |
+| `tier_roles` | Junior and Senior Bureaucrat role IDs |
+| `branch_tracks` | Branch role ID to the ladder that branch promotes on |
 | `promotion_channel` | Where promotions are announced |
 | `audit_channel` | Optional mirror of every merit change |
 | `manage_roles` | Set false to track ranks without touching roles |
@@ -80,6 +120,12 @@ roll the bot out one tier at a time.
 
 Server owners and administrators always pass the permission checks, so a fresh
 install cannot lock itself out.
+
+`officer_roles` deliberately excludes `Senior Bureaucrat`. That role is the tier
+role the bot hands out at 75 merit, so listing it would let anyone promote
+themselves into the power to log merit. The guide defines Officer as Municipal
+Leader and above, which is Regional Command, and that is where the line sits.
+There is a test asserting no tier role appears in either permission list.
 
 ## Commands
 
@@ -125,10 +171,15 @@ pip install pytest pytest-asyncio
 python -m pytest
 ```
 
-The suite covers the ladder, the gate, cap enforcement, demotion behaviour and
-a startup smoke test that builds the whole command tree. The tree test exists
-because a name collision between a command and a group only surfaces at
-startup, which on a live bot means in front of the whole server.
+The suite covers the ladder, the gate, cap enforcement, demotion behaviour,
+track resolution across the three ladders, and a startup smoke test that builds
+the whole command tree. The tree test exists because a name collision between a
+command and a group only surfaces at startup, which on a live bot means in front
+of the whole server.
+
+It also checks the shipped `config.abexilian.json` end to end: every rank on
+every track resolves to a real role, no two tracks share a role, and no tier
+role has leaked into the permission lists.
 
 ## Notes
 
@@ -139,3 +190,13 @@ startup, which on a live bot means in front of the whole server.
 - The bot deliberately does not touch Supreme Command roles. Those are a
   handful of people who get roled by hand, and there is no reason to give a
   merit tracker that blast radius.
+- The bot only needs Manage Roles. It currently holds Administrator on the
+  server, which is far more than a merit tracker should carry.
+- Two role names differ from the guide. The server has `Grand Marshall` and
+  `Abexilian Marshall` where the guide writes Marshal, and
+  `Chairman of the Commission` where the guide writes Chairman of COMPAO. The
+  config follows the server. There is no `Deputy Chairman of COMPAO` role, so
+  that appointment is recorded without a role until one exists.
+- `(Civil Service) Supervisory Clerk)` has a stray closing paren in its role
+  name. The config matches the server as it is, but it is worth renaming so it
+  does not show up that way on profile cards.

@@ -1,62 +1,97 @@
 {
-  "_comment": "Copy this to config.json and fill in the IDs. Emoji are prefilled from the promotion guide.",
-
   "guild_id": "",
-
-  "_officer_roles": "Roles allowed to log merit, grant awards and set oath/uniform flags.",
   "officer_roles": [],
-
-  "_command_roles": "Roles allowed to record appointments and correct merit totals.",
   "command_roles": [],
-
-  "_promotion_channel": "Where promotion announcements go. Leave blank to announce in the channel the command was run in.",
   "promotion_channel": "",
-
-  "_audit_channel": "Optional. Every merit change is mirrored here.",
   "audit_channel": "",
-
-  "_manage_roles": "Set false to have the bot track ranks without touching Discord roles.",
   "manage_roles": true,
-
-  "_demote_on_merit_loss": "Set false to keep a rank once reached, even if merit is later revoked.",
   "demote_on_merit_loss": true,
-
   "embed_color": "0xC9A227",
-
+  "tier_roles": {
+    "Junior Bureaucrat": "",
+    "Senior Bureaucrat": ""
+  },
+  "branch_tracks": {},
   "rank_roles": {
-    "loyalist": "",
-    "junior_loyalist": "",
-    "senior_loyalist": "",
-    "group_loyalist": "",
-    "section_loyalist": "",
-    "unit_loyalist": "",
-    "group_official": "",
-    "service_official": "",
-    "section_official": "",
-    "district_official": "",
-    "precinct_official": ""
+    "base": {
+      "loyalist": "",
+      "junior_loyalist": "",
+      "senior_loyalist": "",
+      "group_loyalist": "",
+      "section_loyalist": "",
+      "unit_loyalist": "",
+      "group_official": "",
+      "service_official": "",
+      "section_official": "",
+      "district_official": "",
+      "precinct_official": ""
+    },
+    "compao": {
+      "loyalist": "",
+      "junior_loyalist": "",
+      "senior_loyalist": "",
+      "group_loyalist": "",
+      "section_loyalist": "",
+      "unit_loyalist": "",
+      "group_official": "",
+      "service_official": "",
+      "section_official": "",
+      "district_official": "",
+      "precinct_official": ""
+    },
+    "civil_service": {
+      "loyalist": "",
+      "junior_loyalist": "",
+      "senior_loyalist": "",
+      "group_loyalist": "",
+      "section_loyalist": "",
+      "unit_loyalist": "",
+      "group_official": "",
+      "service_official": "",
+      "section_official": "",
+      "district_official": "",
+      "precinct_official": ""
+    }
   },
-
   "appointment_roles": {
-    "counselor": "",
-    "grand_chancellor": "",
-    "grand_siridar": "",
-    "grand_marshal": "",
-    "chairman_compao": "",
-    "abexilian_marshal": "",
-    "deputy_chairman_compao": "",
-    "group_leader": "",
-    "national_leader": "",
-    "state_leader": "",
-    "department_leader": "",
-    "regional_leader": "",
-    "provincial_leader": "",
-    "municipal_leader": "",
-    "siridar": "",
-    "governor": "",
-    "prefect": ""
+    "base": {
+      "counselor": "",
+      "grand_chancellor": "",
+      "grand_siridar": "",
+      "grand_marshal": "",
+      "chairman_compao": "",
+      "abexilian_marshal": "",
+      "deputy_chairman_compao": "",
+      "group_leader": "",
+      "national_leader": "",
+      "state_leader": "",
+      "department_leader": "",
+      "regional_leader": "",
+      "provincial_leader": "",
+      "municipal_leader": "",
+      "siridar": "",
+      "governor": "",
+      "prefect": ""
+    },
+    "compao": {
+      "municipal_leader": "",
+      "provincial_leader": "",
+      "regional_leader": "",
+      "department_leader": "",
+      "state_leader": "",
+      "national_leader": "",
+      "group_leader": ""
+    },
+    "civil_service": {
+      "municipal_leader": "",
+      "provincial_leader": "",
+      "regional_leader": "",
+      "department_leader": "",
+      "state_leader": "",
+      "national_leader": "",
+      "group_leader": ""
+    }
   },
-
   "emojis": {
     "loyalist": "<:Loyalist:1540920374487679046>",
     "junior_loyalist": "<:Junior_Loyalist:1540920342850306089>",
@@ -69,7 +104,6 @@
     "section_official": "<:Section_Official:1540919437669179432>",
     "district_official": "<:District_official:1540919332824158288>",
     "precinct_official": "<:Precinct_Official:1540919206197985421>",
-
     "counselor": "<:Counselor:1540943350767681586>",
     "grand_chancellor": "",
     "grand_siridar": "<:Grand_Siridar:1538766881928908840>",
@@ -87,7 +121,6 @@
     "siridar": "<:Siridar:1540964903244931112>",
     "governor": "<:Governor:1538743584835117076>",
     "prefect": "<:Prefect:1541547494721462392>",
-
     "Junior Bureaucrat": "<:Junior_Bureaucrat:1540922235152502894>",
     "Senior Bureaucrat": "<:Senior_Bureaucrat:1540922163643678730>",
     "Regional Command": "<:Regional_Command:1540922051240665208>",

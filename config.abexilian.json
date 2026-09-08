@@ -1,0 +1,151 @@
+{
+  "guild_id": "1462133831095025706",
+  "officer_roles": [
+    "1478490286064799836",
+    "1478489951460130987",
+    "1538382452341350480",
+    "1462555630093992072"
+  ],
+  "command_roles": [
+    "1478489951460130987",
+    "1538382452341350480",
+    "1462555630093992072",
+    "1525941148974321745",
+    "1462133831095025707"
+  ],
+  "promotion_channel": "1540984437607763998",
+  "audit_channel": "",
+  "manage_roles": true,
+  "demote_on_merit_loss": true,
+  "embed_color": "0xC9A227",
+  "tier_roles": {
+    "Junior Bureaucrat": "1478491683284058204",
+    "Senior Bureaucrat": "1478490947485565160"
+  },
+  "branch_tracks": {
+    "1462553332341276858": "compao",
+    "1536306528510808165": "civil_service",
+    "1536306831415058483": "civil_service",
+    "1536306591677157436": "civil_service",
+    "1536306580574703667": "civil_service",
+    "1536306564724691007": "civil_service",
+    "1540799150688444627": "civil_service"
+  },
+  "rank_roles": {
+    "base": {
+      "loyalist": "1462576476057501929",
+      "junior_loyalist": "1462576096573784135",
+      "senior_loyalist": "1462576058749550796",
+      "group_loyalist": "1462575832433430635",
+      "section_loyalist": "1462575806260842630",
+      "unit_loyalist": "1462575781531357459",
+      "group_official": "1462575717576609946",
+      "service_official": "1462575221851685017",
+      "section_official": "1462575219238502583",
+      "district_official": "1462575216277590229",
+      "precinct_official": "1462575213324664977"
+    },
+    "compao": {
+      "loyalist": "1546779195970162738",
+      "junior_loyalist": "1546779018517282836",
+      "senior_loyalist": "1546778871704322099",
+      "group_loyalist": "1546778673460416623",
+      "section_loyalist": "1546778233872326676",
+      "unit_loyalist": "1546777907152683110",
+      "group_official": "1546777675857920040",
+      "service_official": "1546776914180575282",
+      "section_official": "1546776547283959878",
+      "district_official": "1546775411139018752",
+      "precinct_official": "1546773722038538270"
+    },
+    "civil_service": {
+      "loyalist": "1546750162720919552",
+      "junior_loyalist": "1546750099416158208",
+      "senior_loyalist": "1546750064129736744",
+      "group_loyalist": "1546749052237119498",
+      "section_loyalist": "1546748699705868328",
+      "unit_loyalist": "1546748199056707594",
+      "group_official": "1546747766548729886",
+      "service_official": "1546747384392978523",
+      "section_official": "1546746902396149792",
+      "district_official": "1546746552779939970",
+      "precinct_official": "1546745717849071696"
+    }
+  },
+  "appointment_roles": {
+    "base": {
+      "counselor": "1462133831556665652",
+      "grand_chancellor": "1478430163602772049",
+      "grand_siridar": "1502797359502069790",
+      "grand_marshal": "1538723528059265094",
+      "chairman_compao": "1462133831556665651",
+      "abexilian_marshal": "1538723836072034374",
+      "deputy_chairman_compao": "",
+      "group_leader": "1462573838368899072",
+      "national_leader": "1462575116205428817",
+      "state_leader": "1462575198481023169",
+      "department_leader": "1462575201546932225",
+      "regional_leader": "1462575204923347188",
+      "provincial_leader": "1462575207591186556",
+      "municipal_leader": "1462575210346844281",
+      "siridar": "1502797415307284550",
+      "governor": "1502797451378299050",
+      "prefect": "1502797481745055745"
+    },
+    "compao": {
+      "municipal_leader": "1546773324565319732",
+      "provincial_leader": "1546773096302903336",
+      "regional_leader": "1546772430494896238",
+      "department_leader": "1546772057130541096",
+      "state_leader": "1546771729286828082",
+      "national_leader": "1546771191635906570",
+      "group_leader": "1546770894460813362"
+    },
+    "civil_service": {
+      "municipal_leader": "1546744874429055096",
+      "provincial_leader": "1546743657644687360",
+      "regional_leader": "1546742992935719013",
+      "department_leader": "1546742548440031312",
+      "state_leader": "1546741964555296770",
+      "national_leader": "1546739933199343668",
+      "group_leader": "1546738665177358346"
+    }
+  },
+  "emojis": {
+    "loyalist": "<:Loyalist:1540920374487679046>",
+    "junior_loyalist": "<:Junior_Loyalist:1540920342850306089>",
+    "senior_loyalist": "<:Senior_Loyalist:1540920290924826666>",
+    "group_loyalist": "<:Group_Loyalist:1540920192803020820>",
+    "section_loyalist": "<:Section_Loyalist:1540920099165446154>",
+    "unit_loyalist": "<:Unit_Loyalist:1540919947729829938>",
+    "group_official": "<:Group_Official:1540919839982620752>",
+    "service_official": "<:Service_Official:1540919627264172112>",
+    "section_official": "<:Section_Official:1540919437669179432>",
+    "district_official": "<:District_official:1540919332824158288>",
+    "precinct_official": "<:Precinct_Official:1540919206197985421>",
+    "counselor": "<:Counselor:1540943350767681586>",
+    "grand_chancellor": "",
+    "grand_siridar": "<:Grand_Siridar:1538766881928908840>",
+    "grand_marshal": "<:Grand_General:1540942984806146138>",
+    "chairman_compao": "<:Chairman:1540943158169571431>",
+    "abexilian_marshal": "<:Grand_General:1540942984806146138>",
+    "deputy_chairman_compao": "<:Branch_Command:1540921919560355840>",
+    "group_leader": "<:Group_Leader:1540917929481207918>",
+    "national_leader": "<:National_Leader:1540918307648180264>",
+    "state_leader": "<:State_leader:1540918364996898916>",
+    "department_leader": "<:Department_leader:1540918462363471993>",
+    "regional_leader": "<:Regional_Leader:1540918562225397760>",
+    "provincial_leader": "<:Provincial_Leader:1540918690705444874>",
+    "municipal_leader": "<:Municipal_Leader:1540918932230242314>",
+    "siridar": "<:Siridar:1540964903244931112>",
+    "governor": "<:Governor:1538743584835117076>",
+    "prefect": "<:Prefect:1541547494721462392>",
+    "Junior Bureaucrat": "<:Junior_Bureaucrat:1540922235152502894>",
+    "Senior Bureaucrat": "<:Senior_Bureaucrat:1540922163643678730>",
+    "Regional Command": "<:Regional_Command:1540922051240665208>",
+    "High Command": "<:High_Command:1540921978448379924>",
+    "Branch Command": "<:Branch_Command:1540921919560355840>",
+    "Supreme Command": "<:Supreme_Command:1540921864119918712>",
+    "Council of Governors": "<:Governor:1538743584835117076>"
+  }
+}

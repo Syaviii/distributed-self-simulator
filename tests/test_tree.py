@@ -6,14 +6,11 @@ built, which on a live bot means at startup in front of everyone.
 
 import json
 
-import pytest
 import pytest_asyncio
 
 from abex.config import Config
 from abex.db import Database
 from bot import COGS, AbexBot
-
-pytestmark = pytest.mark.asyncio
 
 EXPECTED = {
     "/leaderboard",

@@ -10,7 +10,7 @@ from discord.ext import commands
 
 from ..checks import command_only, officer_only
 from ..promotion import announce, sync_rank
-from ..ranks import APPOINTMENT_BY_KEY, APPOINTMENTS
+from ..ranks import APPOINTMENT_BY_KEY, APPOINTMENTS, get_track
 
 log = logging.getLogger(__name__)
 
@@ -37,9 +37,12 @@ class Roster(commands.Cog):
         state = "recorded" if value else "cleared"
         lines = [f"{label} {state} for {member.mention}."]
         if change.changed:
-            lines.append(f"They are now **{change.new.name}**.")
+            lines.append(f"They are now **{change.title}**.")
         elif change.gated:
-            lines.append("They are still held at Group Loyalist until both are recorded.")
+            lines.append(
+                f"They are still held at {get_track(change.track).title('group_loyalist')} "
+                "until both are recorded."
+            )
         if change.role_warning:
             lines.append(f"Warning: {change.role_warning}")
 
@@ -86,10 +89,14 @@ class Roster(commands.Cog):
             )
             return
 
+        track = get_track(self.bot.config.track_for({r.id for r in member.roles}))
         warning = await self._apply_appointment_role(member, title.key, add=True)
         emoji = self.bot.config.emoji(title.key)
         prefix = f"{emoji} " if emoji else ""
-        lines = [f"{member.mention} is appointed {prefix}**{title.name}**, {title.description}."]
+        lines = [
+            f"{member.mention} is appointed {prefix}**{track.title(title.key)}**, "
+            f"{title.description}."
+        ]
         if note:
             lines.append(f"> {note}")
         if warning:
@@ -124,7 +131,8 @@ class Roster(commands.Cog):
     ) -> str | None:
         if not self.bot.config.manage_roles:
             return None
-        role_id = self.bot.config.appointment_roles.get(key)
+        track = self.bot.config.track_for({r.id for r in member.roles})
+        role_id = self.bot.config.appointment_role(track, key)
         if role_id is None:
             return None
         role = member.guild.get_role(role_id)

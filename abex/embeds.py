@@ -12,7 +12,10 @@ from .ranks import (
     APPOINTMENT_BY_KEY,
     RANK_BY_KEY,
     SOURCE_BY_KEY,
+    TRACK_BASE,
     Rank,
+    Track,
+    get_track,
     is_gated,
     next_rank,
     rank_for_merit,
@@ -45,6 +48,11 @@ def _titled(config: Config, key: str, name: str) -> str:
     return f"{emoji} {name}" if emoji else name
 
 
+def _ranked(config: Config, track: Track, key: str) -> str:
+    """A rank or appointment rendered with the title used on that ladder."""
+    return _titled(config, key, track.title(key))
+
+
 def profile_embed(
     config: Config,
     user: discord.Member | discord.User,
@@ -53,11 +61,13 @@ def profile_embed(
     appointments: list[AppointmentRecord],
     position: int | None,
     population: int,
+    track_key: str = TRACK_BASE,
 ) -> discord.Embed:
+    track = get_track(track_key)
     rank = RANK_BY_KEY.get(record.rank_key, RANK_BY_KEY["loyalist"])
     embed = discord.Embed(
-        title=_titled(config, rank.key, rank.name),
-        description=f"{rank.tier.value} of the Abexilian Remnant",
+        title=_ranked(config, track, rank.key),
+        description=f"{rank.tier.value} of the {track.label}",
         colour=config.embed_color,
     )
     embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
@@ -68,11 +78,13 @@ def profile_embed(
         standing += f"\nRanked {position} of {population}"
     embed.add_field(name="Standing", value=standing, inline=True)
 
-    embed.add_field(name="Progress", value=_progress_text(config, record, rank), inline=True)
+    embed.add_field(name="Progress", value=_progress_text(config, record, rank, track), inline=True)
     embed.add_field(name="Onboarding", value=_onboarding_text(record), inline=False)
 
     if appointments:
-        embed.add_field(name="Appointments", value=_appointment_text(config, appointments), inline=False)
+        embed.add_field(
+            name="Appointments", value=_appointment_text(config, track, appointments), inline=False
+        )
     if awards:
         embed.add_field(
             name=f"Awards ({len(awards)})",
@@ -85,13 +97,13 @@ def profile_embed(
     return embed
 
 
-def _progress_text(config: Config, record: MemberRecord, rank: Rank) -> str:
+def _progress_text(config: Config, record: MemberRecord, rank: Rank, track: Track) -> str:
     if is_gated(record.merit, record.oath, record.uniform):
         earned = rank_for_merit(record.merit)
         return (
-            f"Held at {rank.name}.\n"
-            f"Merit qualifies for **{earned.name}**, but the oath and uniform are required "
-            "to advance past Group Loyalist."
+            f"Held at {track.title(rank.key)}.\n"
+            f"Merit qualifies for **{track.title(earned.key)}**, but the oath and uniform "
+            "are required to advance further."
         )
 
     upcoming = next_rank(rank)
@@ -102,7 +114,7 @@ def _progress_text(config: Config, record: MemberRecord, rank: Rank) -> str:
     remaining = upcoming.merit - record.merit
     return (
         f"{bar}\n{record.merit} / {upcoming.merit} merit\n"
-        f"**{remaining}** to {_titled(config, upcoming.key, upcoming.name)}"
+        f"**{remaining}** to {_ranked(config, track, upcoming.key)}"
     )
 
 
@@ -113,13 +125,15 @@ def _onboarding_text(record: MemberRecord) -> str:
     )
 
 
-def _appointment_text(config: Config, appointments: list[AppointmentRecord]) -> str:
+def _appointment_text(
+    config: Config, track: Track, appointments: list[AppointmentRecord]
+) -> str:
     lines = []
     for record in appointments:
         appointment = APPOINTMENT_BY_KEY.get(record.key)
         if appointment is None:
             continue
-        line = f"{_titled(config, appointment.key, appointment.name)} ({appointment.group})"
+        line = f"{_ranked(config, track, appointment.key)} ({appointment.group})"
         if record.note:
             line += f"\n> {record.note}"
         lines.append(line)

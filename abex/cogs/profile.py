@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from ..embeds import leaderboard_embed, profile_embed
-from ..ranks import RANKS, Tier
+from ..ranks import RANKS, TRACK_BASE, Tier, get_track
 
 
 class Profile(commands.Cog):
@@ -28,9 +28,20 @@ class Profile(commands.Cog):
 
         await interaction.response.send_message(
             embed=profile_embed(
-                self.bot.config, target, record, awards, appointments, position, population
+                self.bot.config,
+                target,
+                record,
+                awards,
+                appointments,
+                position,
+                population,
+                self._track_of(target),
             )
         )
+
+    def _track_of(self, user: discord.Member | discord.User) -> str:
+        roles = getattr(user, "roles", None)
+        return self.bot.config.track_for({r.id for r in roles}) if roles else TRACK_BASE
 
     @app_commands.command(name="leaderboard", description="Top members by merit")
     @app_commands.describe(size="How many to list, default 10")
@@ -54,18 +65,20 @@ class Profile(commands.Cog):
             "conferred by appointment.",
             colour=config.embed_color,
         )
+        track = get_track(self._track_of(interaction.user))
+        embed.set_footer(text=f"Titles shown for the {track.label}")
         for tier in (Tier.JUNIOR_BUREAUCRAT, Tier.SENIOR_BUREAUCRAT):
             lines = []
             for rank in reversed([r for r in RANKS if r.tier is tier]):
                 emoji = config.emoji(rank.key)
                 prefix = f"{emoji} " if emoji else ""
-                lines.append(f"{prefix}**{rank.name}** at {rank.merit} merit")
+                lines.append(f"{prefix}**{track.title(rank.key)}** at {rank.merit} merit")
             embed.add_field(name=tier.value, value="\n".join(lines), inline=False)
 
         embed.add_field(
             name="Gate",
-            value="Group Loyalist needs the branch oath and a division uniform before anyone "
-            "advances further, no matter how much merit they hold.",
+            value=f"{track.title('group_loyalist')} needs the branch oath and a division "
+            "uniform before anyone advances further, no matter how much merit they hold.",
             inline=False,
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)

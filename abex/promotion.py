@@ -14,7 +14,7 @@ import discord
 
 from .config import Config
 from .db import Database, MemberRecord
-from .ranks import RANK_BY_KEY, RANK_INDEX, Rank, entitled_rank, is_gated
+from .ranks import RANK_BY_KEY, RANK_INDEX, TRACK_BASE, Rank, entitled_rank, get_track, is_gated
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +24,17 @@ class RankChange:
     old: Rank
     new: Rank
     gated: bool
+    track: str = TRACK_BASE
     role_warning: str | None = None
+
+    @property
+    def title(self) -> str:
+        """What the new rank is called on the member's own ladder."""
+        return get_track(self.track).title(self.new.key)
+
+    @property
+    def old_title(self) -> str:
+        return get_track(self.track).title(self.old.key)
 
     @property
     def changed(self) -> bool:
@@ -48,32 +58,55 @@ async def sync_rank(
     if not config.demote_on_merit_loss and RANK_INDEX[new.key] < RANK_INDEX[old.key]:
         new = old
 
-    change = RankChange(old=old, new=new, gated=is_gated(record.merit, record.oath, record.uniform))
+    track = TRACK_BASE
+    if member is not None:
+        track = config.track_for({r.id for r in member.roles})
+
+    change = RankChange(
+        old=old,
+        new=new,
+        gated=is_gated(record.merit, record.oath, record.uniform),
+        track=track,
+    )
 
     if change.changed:
         await db.set_rank(record.user_id, new.key)
 
     if member is not None and config.manage_roles:
-        change.role_warning = await apply_rank_roles(config, member, new)
+        change.role_warning = await apply_rank_roles(config, member, new, track)
 
     return change
 
 
-async def apply_rank_roles(config: Config, member: discord.Member, rank: Rank) -> str | None:
-    """Give the member exactly one rank role. Returns a warning string on failure."""
-    target_id = config.rank_roles.get(rank.key)
-    managed = config.rank_role_ids()
+async def apply_rank_roles(
+    config: Config, member: discord.Member, rank: Rank, track: str
+) -> str | None:
+    """Give the member exactly one ladder role and one tier role.
 
-    to_remove = [r for r in member.roles if r.id in managed and r.id != target_id]
+    Roles from the other two ladders are stripped, so a branch transfer moves
+    someone onto the right ladder without anyone cleaning up by hand.
+    """
+    target_id = config.rank_role(track, rank.key)
+    tier_id = config.tier_roles.get(rank.tier.value)
+
+    keep = {target_id, tier_id} - {None}
+    managed = config.all_rank_role_ids() | config.all_tier_role_ids()
+    held = {r.id for r in member.roles}
+
+    to_remove = [r for r in member.roles if r.id in managed and r.id not in keep]
     to_add = []
-    if target_id is not None and target_id not in {r.id for r in member.roles}:
-        role = member.guild.get_role(target_id)
+    missing: list[str] = []
+    for role_id, label in ((target_id, rank.name), (tier_id, rank.tier.value)):
+        if role_id is None or role_id in held:
+            continue
+        role = member.guild.get_role(role_id)
         if role is None:
-            return f"Rank role for {rank.name} is configured as {target_id} but does not exist."
+            missing.append(f"{label} is configured as role {role_id} but that role does not exist")
+            continue
         to_add.append(role)
 
     if not to_remove and not to_add:
-        return None
+        return "; ".join(missing) if missing else None
 
     try:
         if to_remove:
@@ -82,13 +115,13 @@ async def apply_rank_roles(config: Config, member: discord.Member, rank: Rank) -
             await member.add_roles(*to_add, reason="Abexilian rank sync")
     except discord.Forbidden:
         return (
-            "I could not change roles. Move my role above the rank roles and give me "
-            "Manage Roles."
+            "I could not change roles. Give me Manage Roles and drag my role above the "
+            "rank roles, Discord ignores Administrator for anything higher than my own role."
         )
     except discord.HTTPException as exc:
         log.warning("role sync failed for %s: %s", member.id, exc)
         return f"Discord rejected the role change: {exc}"
-    return None
+    return "; ".join(missing) if missing else None
 
 
 async def announce(
@@ -116,13 +149,13 @@ async def announce(
     prefix = f"{emoji} " if emoji else ""
     if change.promoted:
         title = "Promotion"
-        body = f"{member.mention} advances to {prefix}**{change.new.name}**."
+        body = f"{member.mention} advances to {prefix}**{change.title}**."
     else:
         title = "Rank adjustment"
-        body = f"{member.mention} is now {prefix}**{change.new.name}**, down from {change.old.name}."
+        body = f"{member.mention} is now {prefix}**{change.title}**, down from {change.old_title}."
 
     embed = discord.Embed(title=title, description=body, colour=config.embed_color)
-    embed.set_footer(text=f"Previously {change.old.name}" if change.promoted else "Abexilian Remnant")
+    embed.set_footer(text=get_track(change.track).label)
     try:
         await channel.send(embed=embed)
     except discord.HTTPException as exc:

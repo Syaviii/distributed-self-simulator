@@ -1,13 +1,10 @@
 """Rank syncing, with Discord left out of it."""
 
-import pytest
 import pytest_asyncio
 
-from abex.config import Config, ConfigError
+from abex.config import Config
 from abex.db import Database
 from abex.promotion import sync_rank
-
-pytestmark = pytest.mark.asyncio
 
 
 def make_config(**overrides) -> Config:
