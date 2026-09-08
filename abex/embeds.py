@@ -61,9 +61,10 @@ def profile_embed(
     appointments: list[AppointmentRecord],
     position: int | None,
     population: int,
-    track_key: str = TRACK_BASE,
+    track_keys: list[str] | None = None,
 ) -> discord.Embed:
-    track = get_track(track_key)
+    tracks = [get_track(k) for k in (track_keys or [TRACK_BASE])]
+    track = tracks[0]
     rank = RANK_BY_KEY.get(record.rank_key, RANK_BY_KEY["loyalist"])
     embed = discord.Embed(
         title=_ranked(config, track, rank.key),
@@ -80,6 +81,14 @@ def profile_embed(
 
     embed.add_field(name="Progress", value=_progress_text(config, record, rank, track), inline=True)
     embed.add_field(name="Onboarding", value=_onboarding_text(record), inline=False)
+
+    if len(tracks) > 1:
+        # A member in more than one branch holds a rank on each ladder.
+        embed.add_field(
+            name="Branches",
+            value="\n".join(f"{t.short}: **{t.title(rank.key)}**" for t in tracks),
+            inline=False,
+        )
 
     if appointments:
         embed.add_field(

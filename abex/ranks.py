@@ -191,6 +191,7 @@ class Track:
     key: str
     label: str
     names: dict[str, str]
+    short: str = ""
 
     def title(self, key: str) -> str:
         """Display name for a rank or appointment on this track."""
@@ -231,9 +232,14 @@ _CIVIL_NAMES = {
 }
 
 TRACKS: dict[str, Track] = {
-    TRACK_BASE: Track(TRACK_BASE, "Abexilian Remnant", {}),
-    TRACK_COMPAO: Track(TRACK_COMPAO, "Commission for the Promotion of the Abexilian Order", {}),
-    TRACK_CIVIL: Track(TRACK_CIVIL, "Civil Service", _CIVIL_NAMES),
+    TRACK_BASE: Track(TRACK_BASE, "Abexilian Remnant", {}, short="Bureaucracy"),
+    TRACK_COMPAO: Track(
+        TRACK_COMPAO,
+        "Commission for the Promotion of the Abexilian Order",
+        {},
+        short="Commission",
+    ),
+    TRACK_CIVIL: Track(TRACK_CIVIL, "Civil Service", _CIVIL_NAMES, short="Civil Service"),
 }
 
 

@@ -37,7 +37,7 @@ class Roster(commands.Cog):
         state = "recorded" if value else "cleared"
         lines = [f"{label} {state} for {member.mention}."]
         if change.changed:
-            lines.append(f"They are now **{change.title}**.")
+            lines.append(f"They are now **{change.titles}**.")
         elif change.gated:
             lines.append(
                 f"They are still held at {get_track(change.track).title('group_loyalist')} "

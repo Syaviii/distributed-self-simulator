@@ -94,16 +94,23 @@ class Config:
 
     # role lookups ----------------------------------------------------------
 
-    def track_for(self, role_ids: set[int]) -> str:
-        """Which ladder a member is on, from their branch roles.
+    def tracks_for(self, role_ids: set[int]) -> list[str]:
+        """Every ladder a member sits on, from their branch roles.
 
-        Falls back to the base track, which is what most of the server is on.
+        Members may join all four branches at once, one division in each, so
+        this returns a list rather than a single track. Someone in both the
+        Commission and the Civil Service holds a rank on both ladders at the
+        same merit total. Anyone with no branch role falls back to the base
+        ranks, which the server calls the Bureaucracy structure.
         """
-        for role_id in role_ids:
-            track = self.branch_tracks.get(role_id)
-            if track is not None:
-                return track
-        return TRACK_BASE
+        found = {self.branch_tracks[r] for r in role_ids if r in self.branch_tracks}
+        if not found:
+            return [TRACK_BASE]
+        return [t for t in TRACKS if t in found]
+
+    def track_for(self, role_ids: set[int]) -> str:
+        """The ladder to render titles from when only one can be shown."""
+        return self.tracks_for(role_ids)[0]
 
     def rank_role(self, track: str, rank_key: str) -> int | None:
         """Role for a rank on a track, falling back to the base ladder."""

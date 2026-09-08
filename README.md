@@ -16,11 +16,23 @@ recalculates the rank, swaps the Discord role and announces the promotion.
 of Governors track, are conferred rather than earned. The bot records them and
 shows them on the profile card. It never hands one out on its own.
 
-## Three ladders
+## Branches and ladders
 
-The server runs three parallel ladders on identical merit thresholds. The bot
-picks the right one from a member's branch roles and gives them the matching
-role, stripping any role from the other two on the way.
+The Remnant has four branches: the Armed Forces, COMPAO, the Civil Services and
+the Regional Government. A member may belong to all four at once, one division
+in each, so rank is not a single role. Three of those ladders exist as Discord
+roles today and the bot gives a member their rank on **every** ladder they
+belong to, at one shared merit total. Someone in both the Commission and the
+Civil Service on 210 merit is a Section Official and a Supervisor at the same
+time, and their profile card names both.
+
+Ladder roles from branches a member is not in get stripped on sync, which is
+what makes a branch transfer clean up after itself.
+
+The Army has no ladder roles of its own and falls through to the base ranks,
+which the server's own quick guide calls the Bureaucracy structure. The
+Regional Government does not promote on merit at all: Prefect, Governor,
+Siridar and Grand Siridar are appointments.
 
 | Merit | Base | COMPAO | Civil Service |
 | --- | --- | --- | --- |
@@ -40,11 +52,16 @@ COMPAO uses the same titles as the base ladder but its own set of roles. The
 Civil Service renames every step, so a profile card, a promotion announcement
 and `/ranks` all show a member the titles their own branch uses.
 
-Track membership comes from `branch_tracks` in the config: the Select Committee
-role means COMPAO, the ministry and Diplomatic Corps roles mean Civil Service,
-and everyone else is on the base ladder. Merit is personal, so transferring
-branch keeps the total and simply swaps the role. Someone on 210 merit moving
-into the Civil Service stops being a Section Official and becomes a Supervisor.
+Branch membership comes from `branch_tracks` in the config. The Enlightenment
+Group, the Department of Information and Culture and the Abexilian Security
+Bureau are the divisions that put someone on the Commission ladder, and the
+Select Committee is its leadership. The ministries, the Diplomatic Corps and
+Civil Services Unassigned are the Civil Service ladder.
+
+The government structure chart lists eleven ladders, one per division, with
+per-ministry titles. Only three exist as Discord roles, so only three are
+implemented. Adding a fourth means creating its roles and adding a name map to
+`abex/ranks.py`.
 
 The bot also keeps the `Junior Bureaucrat` and `Senior Bureaucrat` tier roles in
 step with the rank, so crossing 75 merit swaps one for the other.
@@ -164,6 +181,40 @@ There is a test asserting no tier role appears in either permission list.
 `/roster sync` with no member is the migration path. Import totals with
 `/merit set`, then run it once and every role lands where it belongs.
 
+## Backdating existing merit
+
+Role changes are switched off in the shipped config (`manage_roles: false`)
+while existing totals are loaded, so the bot records everything and moves no
+roles. Turn it back on once the numbers are right.
+
+`tools/import_merit.py` loads totals from a CSV. It prints what it would change
+and writes nothing until you pass `--apply`.
+
+```
+python tools/import_merit.py totals.csv            # dry run
+python tools/import_merit.py totals.csv --apply
+```
+
+Column names are matched loosely, so a spreadsheet export usually works as it
+is. A member can be a raw ID or a Discord mention. Duplicate rows and
+unreadable IDs are reported rather than silently applied, and the gate still
+applies, so importing 300 merit with no oath recorded leaves that member at
+Group Loyalist exactly as the rules say.
+
+The merit column is read as a total to set, which makes a re-run a no-op. Pass
+`--add` to treat it as an amount to add instead, which is what a partial source
+needs so it does not overwrite totals loaded from elsewhere. `--add` is not
+idempotent, so do not run the same file through it twice.
+
+`tools/scrape_oaths.py` reads the oath channel and writes the same CSV format,
+one row per member with the earliest oath kept:
+
+```
+export DISCORD_TOKEN=...
+python tools/scrape_oaths.py <channel id> > oaths.csv
+python tools/import_merit.py oaths.csv --add
+```
+
 ## Development
 
 ```
@@ -172,8 +223,9 @@ python -m pytest
 ```
 
 The suite covers the ladder, the gate, cap enforcement, demotion behaviour,
-track resolution across the three ladders, and a startup smoke test that builds
-the whole command tree. The tree test exists because a name collision between a
+branch resolution across the three ladders including members in two branches at
+once, the importer, and a startup smoke test that builds the whole command
+tree. The tree test exists because a name collision between a
 command and a group only surfaces at startup, which on a live bot means in front
 of the whole server.
 
@@ -192,6 +244,9 @@ role has leaked into the permission lists.
   merit tracker that blast radius.
 - The bot only needs Manage Roles. It currently holds Administrator on the
   server, which is far more than a merit tracker should carry.
+- Ministry of Justice appears in the structure chart but has no Discord role,
+  and neither do Vice Chancellor, Chief of Operations, or the two COMPAO
+  Director posts. They cannot be recorded until the roles exist.
 - Two role names differ from the guide. The server has `Grand Marshall` and
   `Abexilian Marshall` where the guide writes Marshal, and
   `Chairman of the Commission` where the guide writes Chairman of COMPAO. The

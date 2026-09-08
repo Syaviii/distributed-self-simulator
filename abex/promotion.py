@@ -8,7 +8,7 @@ the result.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import discord
 
@@ -24,8 +24,13 @@ class RankChange:
     old: Rank
     new: Rank
     gated: bool
-    track: str = TRACK_BASE
+    tracks: list[str] = field(default_factory=lambda: [TRACK_BASE])
     role_warning: str | None = None
+
+    @property
+    def track(self) -> str:
+        """The ladder to quote when only one title fits."""
+        return self.tracks[0] if self.tracks else TRACK_BASE
 
     @property
     def title(self) -> str:
@@ -35,6 +40,15 @@ class RankChange:
     @property
     def old_title(self) -> str:
         return get_track(self.track).title(self.old.key)
+
+    @property
+    def titles(self) -> str:
+        """Every title this rank carries, for a member in more than one branch."""
+        if len(self.tracks) < 2:
+            return self.title
+        return ", ".join(
+            f"{get_track(t).title(self.new.key)} ({get_track(t).short})" for t in self.tracks
+        )
 
     @property
     def changed(self) -> bool:
@@ -58,22 +72,22 @@ async def sync_rank(
     if not config.demote_on_merit_loss and RANK_INDEX[new.key] < RANK_INDEX[old.key]:
         new = old
 
-    track = TRACK_BASE
+    tracks = [TRACK_BASE]
     if member is not None:
-        track = config.track_for({r.id for r in member.roles})
+        tracks = config.tracks_for({r.id for r in member.roles})
 
     change = RankChange(
         old=old,
         new=new,
         gated=is_gated(record.merit, record.oath, record.uniform),
-        track=track,
+        tracks=tracks,
     )
 
     if change.changed:
         await db.set_rank(record.user_id, new.key)
 
     if member is not None and config.manage_roles:
-        change.role_warning = await apply_rank_roles(config, member, new, track)
+        change.role_warning = await apply_rank_roles(config, member, new, tracks)
 
     return change
 
@@ -89,25 +103,32 @@ def paused_note(config: Config, change: RankChange) -> str | None:
 
 
 async def apply_rank_roles(
-    config: Config, member: discord.Member, rank: Rank, track: str
+    config: Config, member: discord.Member, rank: Rank, tracks: list[str]
 ) -> str | None:
-    """Give the member exactly one ladder role and one tier role.
+    """Give the member their rank role on every ladder they belong to.
 
-    Roles from the other two ladders are stripped, so a branch transfer moves
-    someone onto the right ladder without anyone cleaning up by hand.
+    Members may sit in more than one branch, so this grants the rank on each of
+    their ladders and one shared tier role. Ladder roles from branches they are
+    not in get stripped, which is what makes a branch transfer clean itself up.
     """
-    target_id = config.rank_role(track, rank.key)
     tier_id = config.tier_roles.get(rank.tier.value)
+    wanted: list[tuple[int, str]] = []
+    for track in tracks:
+        role_id = config.rank_role(track, rank.key)
+        if role_id is not None:
+            wanted.append((role_id, get_track(track).title(rank.key)))
+    if tier_id is not None:
+        wanted.append((tier_id, rank.tier.value))
 
-    keep = {target_id, tier_id} - {None}
+    keep = {role_id for role_id, _ in wanted}
     managed = config.all_rank_role_ids() | config.all_tier_role_ids()
     held = {r.id for r in member.roles}
 
     to_remove = [r for r in member.roles if r.id in managed and r.id not in keep]
     to_add = []
     missing: list[str] = []
-    for role_id, label in ((target_id, rank.name), (tier_id, rank.tier.value)):
-        if role_id is None or role_id in held:
+    for role_id, label in wanted:
+        if role_id in held:
             continue
         role = member.guild.get_role(role_id)
         if role is None:
@@ -159,13 +180,13 @@ async def announce(
     prefix = f"{emoji} " if emoji else ""
     if change.promoted:
         title = "Promotion"
-        body = f"{member.mention} advances to {prefix}**{change.title}**."
+        body = f"{member.mention} advances to {prefix}**{change.titles}**."
     else:
         title = "Rank adjustment"
-        body = f"{member.mention} is now {prefix}**{change.title}**, down from {change.old_title}."
+        body = f"{member.mention} is now {prefix}**{change.titles}**, down from {change.old_title}."
 
     embed = discord.Embed(title=title, description=body, colour=config.embed_color)
-    embed.set_footer(text=get_track(change.track).label)
+    embed.set_footer(text=" and the ".join(get_track(t).label for t in change.tracks))
     try:
         await channel.send(embed=embed)
     except discord.HTTPException as exc:

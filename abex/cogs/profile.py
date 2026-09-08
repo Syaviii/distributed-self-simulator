@@ -35,13 +35,13 @@ class Profile(commands.Cog):
                 appointments,
                 position,
                 population,
-                self._track_of(target),
+                self._tracks_of(target),
             )
         )
 
-    def _track_of(self, user: discord.Member | discord.User) -> str:
+    def _tracks_of(self, user: discord.Member | discord.User) -> list[str]:
         roles = getattr(user, "roles", None)
-        return self.bot.config.track_for({r.id for r in roles}) if roles else TRACK_BASE
+        return self.bot.config.tracks_for({r.id for r in roles}) if roles else [TRACK_BASE]
 
     @app_commands.command(name="leaderboard", description="Top members by merit")
     @app_commands.describe(size="How many to list, default 10")
@@ -65,7 +65,7 @@ class Profile(commands.Cog):
             "conferred by appointment.",
             colour=config.embed_color,
         )
-        track = get_track(self._track_of(interaction.user))
+        track = get_track(self._tracks_of(interaction.user)[0])
         embed.set_footer(text=f"Titles shown for the {track.label}")
         for tier in (Tier.JUNIOR_BUREAUCRAT, Tier.SENIOR_BUREAUCRAT):
             lines = []

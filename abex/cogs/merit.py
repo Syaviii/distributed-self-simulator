@@ -24,10 +24,10 @@ from ..ranks import (
     merit_from_tithe,
 )
 
-def _track_of(config, user) -> str:
-    """Which ladder this member promotes on, from their branch roles."""
+def _tracks_of(config, user) -> list[str]:
+    """Every ladder this member promotes on, from their branch roles."""
     roles = getattr(user, "roles", None)
-    return config.track_for({r.id for r in roles}) if roles else TRACK_BASE
+    return config.tracks_for({r.id for r in roles}) if roles else [TRACK_BASE]
 
 
 SOURCE_CHOICES = [
@@ -65,7 +65,7 @@ class Merit(commands.Cog):
         lines = [headline, f"Total: **{record.merit}** merit, {change.title}."]
         if change.changed:
             verb = "Promoted to" if change.promoted else "Moved to"
-            lines.append(f"{verb} **{change.title}**.")
+            lines.append(f"{verb} **{change.titles}**.")
         if change.gated:
             lines.append(
                 "Held at Group Loyalist until the oath and uniform are recorded. "
@@ -116,7 +116,7 @@ class Merit(commands.Cog):
                 await self.bot.db.appointments(user.id),
                 await self.bot.db.rank_position(user.id),
                 await self.bot.db.member_count(),
-                _track_of(self.bot.config, user),
+                _tracks_of(self.bot.config, user),
             ),
             ephemeral=True,
         )
