@@ -20,6 +20,10 @@ COGS = ("abex.cogs.merit", "abex.cogs.profile", "abex.cogs.roster")
 log = logging.getLogger("abex")
 
 
+class WrongGuild(app_commands.CheckFailure):
+    message = "This bot is locked to another server and will not act here."
+
+
 class AbexBot(commands.Bot):
     def __init__(self, config: Config, db: Database) -> None:
         intents = discord.Intents.default()
@@ -33,13 +37,31 @@ class AbexBot(commands.Bot):
         for cog in COGS:
             await self.load_extension(cog)
 
-        guild = discord.Object(id=self.config.guild_id)
-        self.tree.copy_global_to(guild=guild)
-        synced = await self.tree.sync(guild=guild)
-        log.info("synced %d commands to guild %s", len(synced), self.config.guild_id)
+        # Nothing is registered globally, so the commands only ever appear in the
+        # servers named in the config. The check below is the belt to that
+        # braces: even if a command leaks, it refuses to act anywhere else.
+        self.tree.interaction_check = self.allowed_here
+
+        for guild_id in sorted(self.config.guilds):
+            guild = discord.Object(id=guild_id)
+            self.tree.copy_global_to(guild=guild)
+            synced = await self.tree.sync(guild=guild)
+            log.info("synced %d commands to guild %s", len(synced), guild_id)
+
+    async def allowed_here(self, interaction: discord.Interaction) -> bool:
+        if self.config.is_allowed(interaction.guild_id):
+            return True
+        log.warning(
+            "refused %s from guild %s", interaction.command and interaction.command.name,
+            interaction.guild_id,
+        )
+        raise WrongGuild(WrongGuild.message)
 
     async def on_ready(self) -> None:
         log.info("connected as %s", self.user)
+        for guild in self.guilds:
+            state = "active" if self.config.is_allowed(guild.id) else "IGNORED"
+            log.info("  %s (%s) %s", guild.name, guild.id, state)
         await self.change_presence(activity=discord.Game(name="/profile"))
 
     async def close(self) -> None:
@@ -50,7 +72,7 @@ class AbexBot(commands.Bot):
 async def on_app_command_error(
     interaction: discord.Interaction, error: app_commands.AppCommandError
 ) -> None:
-    if isinstance(error, (MissingOfficer, MissingCommand)):
+    if isinstance(error, (MissingOfficer, MissingCommand, WrongGuild)):
         message = str(error) or "You are not allowed to do that."
     elif isinstance(error, app_commands.CommandOnCooldown):
         message = f"Slow down, try again in {error.retry_after:.0f}s."

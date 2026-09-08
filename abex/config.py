@@ -23,6 +23,7 @@ class ConfigError(RuntimeError):
 @dataclass
 class Config:
     guild_id: int
+    allowed_guilds: list[int] = field(default_factory=list)
     officer_roles: list[int] = field(default_factory=list)
     command_roles: list[int] = field(default_factory=list)
     rank_roles: dict[str, dict[str, int]] = field(default_factory=dict)
@@ -51,6 +52,7 @@ class Config:
 
         cfg = cls(
             guild_id=guild_id,
+            allowed_guilds=[int(v) for v in raw.get("allowed_guilds", []) if v],
             officer_roles=[int(v) for v in raw.get("officer_roles", []) if v],
             command_roles=[int(v) for v in raw.get("command_roles", []) if v],
             rank_roles=_role_map(raw.get("rank_roles", {})),
@@ -91,6 +93,17 @@ class Config:
 
         if not self.officer_roles:
             raise ConfigError("officer_roles is empty, nobody would be able to log merit")
+
+        if self.guild_id not in self.guilds:
+            raise ConfigError("allowed_guilds does not include guild_id")
+
+    @property
+    def guilds(self) -> set[int]:
+        """Servers this bot will answer in. Anywhere else is ignored outright."""
+        return {self.guild_id, *self.allowed_guilds}
+
+    def is_allowed(self, guild_id: int | None) -> bool:
+        return guild_id is not None and guild_id in self.guilds
 
     # role lookups ----------------------------------------------------------
 

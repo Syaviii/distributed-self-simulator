@@ -10,11 +10,11 @@ from .config import Config
 from .db import AppointmentRecord, AwardRecord, LogEntry, MemberRecord
 from .ranks import (
     APPOINTMENT_BY_KEY,
-    RANK_BY_KEY,
     SOURCE_BY_KEY,
     TRACK_BASE,
     Rank,
     Track,
+    entitled_rank,
     get_track,
     is_gated,
     next_rank,
@@ -65,13 +65,16 @@ def profile_embed(
 ) -> discord.Embed:
     tracks = [get_track(k) for k in (track_keys or [TRACK_BASE])]
     track = tracks[0]
-    rank = RANK_BY_KEY.get(record.rank_key, RANK_BY_KEY["loyalist"])
+    rank = entitled_rank(record.merit, record.oath, record.uniform)
+    # Multi branch members are named on each ladder in the Branches field, so
+    # the description does not pick a favourite.
+    home = f"{rank.tier.value} of the {track.label}" if len(tracks) == 1 else rank.tier.value
     embed = discord.Embed(
         title=_ranked(config, track, rank.key),
-        description=f"{rank.tier.value} of the {track.label}",
+        description=home,
         colour=config.embed_color,
     )
-    embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
+    embed.set_author(name=user.display_name)
     embed.set_thumbnail(url=user.display_avatar.url)
 
     standing = f"**{record.merit}** merit"
@@ -185,11 +188,11 @@ def leaderboard_embed(
 
     lines = []
     for position, record in enumerate(records, start=1):
-        rank = RANK_BY_KEY.get(record.rank_key, RANK_BY_KEY["loyalist"])
+        rank = entitled_rank(record.merit, record.oath, record.uniform)
         emoji = config.emoji(rank.key)
         name = f"<@{record.user_id}>"
         lines.append(f"`{position:>2}.` {emoji} {name}  **{record.merit}** merit")
 
     embed.description = "\n".join(lines)
-    embed.set_footer(text=f"{guild.name} - Abexilian Remnant")
+    embed.set_footer(text=f"{guild.name} merit ladder")
     return embed
